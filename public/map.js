@@ -31,16 +31,50 @@ const warIcons = [
 ];
 
 const conflicts = {
-    kashmir: {
+    libya: {
+        location: cityLatLons.tripoli,
         parties: [
-            {
-                name: "India",
-                fromLatLon: [20.5937, 78.9629],
-            },
-            {
-                name: "Pakistan",
-                fromLatLon: [30, 70],
-            },
+            [
+                {
+                    name: "United Nations (HQ in New York, USA)",
+                    code: "UN",
+                    fromLatLon: [40.7489, -73.968],
+                },
+                { name: "Italy", code: "IT", fromLatLon: [41.8719, 12.5674] },
+                { name: "Qatar", code: "QA", fromLatLon: [25.3548, 51.1839] },
+                { name: "Turkey", code: "TR", fromLatLon: [38.9637, 35.2433] },
+            ],
+            [
+                {
+                    name: "Saudi Arabia",
+                    code: "SA",
+                    fromLatLon: [23.8859, 45.0792],
+                },
+                { name: "Egypt", code: "EG", fromLatLon: [26.8206, 30.8025] },
+                { name: "Russia", code: "RU", fromLatLon: [61.524, 105.3188] },
+                { name: "France", code: "FR", fromLatLon: [46.2276, 2.2137] },
+                { name: "UAE", code: "AE", fromLatLon: [23.4241, 53.8478] },
+            ],
+        ],
+    },
+    kashmir: {
+        location: cityLatLons.srinaga,
+        parties: [
+            [{ name: "India", code: "IN", fromLatLon: [20.5937, 78.9629] }],
+            [{ name: "Pakistan", code: "PK", fromLatLon: [30, 70] }],
+        ],
+    },
+    yemen: {
+        location: cityLatLons.sanaa,
+        parties: [
+            [
+                {
+                    name: "Saudi Arabia",
+                    code: "SA",
+                    fromLatLon: [23.8859, 45.0792],
+                },
+            ],
+            [{ name: "Iran", code: "IR", fromLatLon: [32.4279, 53.688] }],
         ],
     },
 };
@@ -49,30 +83,83 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
 }
 
+// hold temp elements to be deleted
+var tempElements = [];
+function drawGeo(countries, geoColor) {
+    countries.forEach((country) => {
+        if (worldGeoJSON[country.code]) {
+            const tempGeo = L.geoJson(worldGeoJSON[country.code], {
+                color: geoColor,
+            }).addTo(mymap);
+            tempGeo.bindPopup(country.name);
+            tempElements.push(tempGeo);
+        }
+    });
+}
+
+function drawLine(location, countries, geoColor) {
+    countries.forEach((country) => {
+        const testLine = L.polyline([location, country.fromLatLon], {
+            color: geoColor,
+        }).addTo(mymap);
+        tempElements.push(testLine);
+
+        if (!worldGeoJSON[country.code]) {
+            console.log("getzoom " + mymap.getZoom());
+            const tempCircle = L.circle(country.fromLatLon, {
+                color: geoColor,
+                radius: 10000 * mymap.getZoom(),
+            }).addTo(mymap);
+            tempCircle.bindPopup(country.name);
+            tempElements.push(tempCircle);
+        }
+    });
+}
+
+function drawWar(war) {
+    tempElements.forEach((e) => {
+        mymap.removeLayer(e);
+    });
+    tempElements = [];
+
+    drawGeo(war.parties[0], "red");
+    drawGeo(war.parties[1], "green");
+    drawLine(war.location, war.parties[0], "red");
+    drawLine(war.location, war.parties[1], "green");
+}
+
 const tripoliMarker = L.marker(cityLatLons["tripoli"], {
     icon: warIcons[getRandomInt(warIcons.length)],
 }).addTo(mymap);
 
-tripoliMarker.bindPopup("Tripoli, Libya");
+tripoliMarker.bindPopup("Libyan Civil War");
+tripoliMarker.on({
+    click: () => {
+        mymap.setView(cityLatLons["tripoli"], 4);
+        drawWar(conflicts.libya);
+    },
+});
 
 const sanaaMarker = L.marker(cityLatLons["sanaa"], {
     icon: warIcons[getRandomInt(warIcons.length)],
 }).addTo(mymap);
 
-sanaaMarker.bindPopup("Sana'a, Yemen");
+sanaaMarker.bindPopup("Yemen Civil War");
+sanaaMarker.on({
+    click: () => {
+        mymap.setView(cityLatLons["sanaa"], 4);
+        drawWar(conflicts.yemen);
+    },
+});
 
 const srinagarMarker = L.marker(cityLatLons["srinaga"], {
     icon: warIcons[getRandomInt(warIcons.length)],
 }).addTo(mymap);
 
-srinagarMarker.bindPopup("Srinagar, India (Kashmir)");
-
-const testLine = L.polyline([
-    cityLatLons["srinaga"],
-    conflicts.kashmir.parties[0].fromLatLon,
-]).addTo(mymap);
-
-const testLine2 = L.polyline([
-    cityLatLons["srinaga"],
-    conflicts.kashmir.parties[1].fromLatLon,
-]).addTo(mymap);
+srinagarMarker.bindPopup("Conflicts in Kashmir");
+srinagarMarker.on({
+    click: () => {
+        mymap.setView(cityLatLons["srinaga"], 4);
+        drawWar(conflicts.kashmir);
+    },
+});
