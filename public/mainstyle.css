@@ -1,0 +1,35 @@
+html,
+body {
+    height: 99%;
+}
+
+#mymap {
+    height: 100%;
+}
+
+/* Will-change memory consumption is too high */
+.leaflet-fade-anim .leaflet-tile,
+.leaflet-zoom-anim .leaflet-zoom-animated {
+    will-change: auto !important;
+}
+
+#infoPanel {
+    position: absolute;
+    left: 10%;
+    bottom: 30px;
+    width: 80%;
+    height: 30%;
+    z-index: 314159;
+    margin: 0 auto;
+    padding: 20px;
+
+    border-radius: 25px;
+    border: 2px solid #73ad21;
+    background-color: beige;
+}
+
+#infoPanelClose {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+}
